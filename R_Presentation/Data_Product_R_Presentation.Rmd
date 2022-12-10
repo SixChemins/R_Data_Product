@@ -1,0 +1,70 @@
+---
+title: "R Presentation with Plotly"
+subtitle: "Data Product Course"
+author: "Six_Paths"
+date: "09/12/2022"
+output:
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+suppressPackageStartupMessages(library("ggplot2", quietly = T))
+suppressPackageStartupMessages(library("plotly", quietly = T))
+suppressPackageStartupMessages(library("cowplot", quietly = T))
+
+```
+
+
+## R Markdown
+
+#### **Summary of this presentation : **
+
+This presentation aims to show  case of Data representation using charting
+and plotting based on plotly library.
+
+
+#### **Keys section of this presentation are :**
+
+
+1. Summary on Used data and purpose analysis
+
+2. Basic and Quick Stats on Data
+
+3. Data Representations using Plotly
+
+
+## Summary  : Used data and purpose analysis
+
+Diamonds data set was used in this analysis to make some data representation using plotly.
+
+This data was embedded into into ggplot2 package.
+
+It is a multivariate data set which has measurements on price and some different
+diamonds characteristic (carat price, color, clarity, etc.).
+
+A full description of this data is available on wikipedia following this link
+[https://ggplot2.tidyverse.org/reference/diamonds.html].
+
+
+## Basic and Quick Stats on Data  
+##### (Slide with R Output)
+```{r diamonds_df, echo = FALSE}
+diamond_df <- diamonds
+summary(diamond_df)
+
+```
+
+
+## Data Representations using Plotly
+##### (Slide with Plot)
+
+```{r plot_output, echo=FALSE}
+#create histogram of values for price
+diamond_plot <- plot_ly(diamonds, x = ~cut, color = ~clarity) %>%
+  add_histogram() %>% layout(legend = list(x = 0.1, y = 0.9),
+                             title="Diamond count by Clarity and quality")
+
+diamond_plot
+
+```
