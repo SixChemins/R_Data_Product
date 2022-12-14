@@ -1,0 +1,126 @@
+---
+title: "R Shiny App Presentation"
+subtitle: "Data Product Course"
+author: "Six_Paths"
+date: "12/12/2022"
+output:
+  ioslides_presentation: default
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+suppressPackageStartupMessages(library("ggplot2", quietly = T))
+suppressPackageStartupMessages(library("plotly", quietly = T))
+suppressPackageStartupMessages(library("cowplot", quietly = T))
+
+### Load library
+library(reshape2) 
+library(plotly)
+
+###
+N_Eq<-10 # Number of equities
+t <- 1000
+mu <- 0.05
+sigma <- 0.2
+S0 <- 100
+
+gbm_loop <- function(N_Eq = 100, t = 25, mu = 0, sigma = 0.1, S0 = 100, dt = 1./365) {
+  gbm <- matrix(ncol = N_Eq, nrow = t)
+  for (simu in 1:N_Eq) { gbm[1, simu] <- S0
+  for (day in 2:t) {epsilon <- rnorm(1)
+  dt = 1 / 365
+  gbm[day, simu] <- gbm[(day-1), simu] * exp((mu - sigma * sigma / 2) 
+                                             * dt + sigma * epsilon * sqrt(dt))}}
+  return(gbm)}
+
+## generate portfolio
+df_eq <- gbm_loop(N_Eq, t, mu, sigma, S0)
+
+## Set portfolio weight (Equal weighted portfolio in this example)
+pf_eq_w <- rep(1/dim(df_eq)[2],dim(df_eq)[2])
+
+## Compute continuously compounded return of assets 
+df_eq_return <- diff(log(df_eq), lag=1)
+
+## Set Colors for graph
+cols = rainbow(N_Eq)
+df_eq_plotly <- as.data.frame(df_eq)
+names(df_eq_plotly) <- paste0("Asset_ID_", 1:dim(df_eq_plotly)[2])
+
+df_eq_plotly$x_col <- (1:dim(df_eq_plotly)[1])
+df_eq_plotly_melt <- melt(df_eq_plotly, id = "x_col") 
+
+df_eq_graph <- plot_ly(df_eq_plotly_melt, x=~x_col, y=~value, group=~variable, color=~variable, 
+                       mode = "lines") %>% layout(title = 'Dynamic of Brownian Asset price', 
+                                                  xaxis = list(title = 'Nb_Simul'), 
+                                                  font=t, plot_bgcolor = "#e5ecf6", 
+                                                  yaxis = list(title = 'Asset_Price'), 
+                                                  legend = list(title=list(text='Asset_ID')))
+
+```
+
+
+## R Markdown
+
+#### **Summary of this presentation : **
+
+This presentation aims to present a built and deployed Shiny application on  Rstudio's servers.
+
+Using a reproducible pitch presentation about the application wil be describe in next pages
+
+#### **Keys section of this presentation are :**
+
+1. Used data and purpose analysis
+
+2. Quick presentation of models and parameters
+
+3. Indicators computing and Data Representations
+
+Final App can bes acces here [https://github.com/SixChemins/R_Data_Product/tree/main/Shiny_App] 
+
+## Summary  : Used data and purpose analysis
+
+From Brownian asset prices, a basic equal weighted portfolio was built and associated indicators are computed 
+
+Asset price are randomly generate using geometric Brownian motion that is a continuous-time stochastic process in which the logarithm of the randomly varying quantity follows a Brownian motion (also called a Wiener process.
+
+For more details, please refer to follow links:
+1.[https://en.wikipedia.org/wiki/Geometric_Brownian_motion]
+2.[https://www.quora.com/What-is-Brownian-motion-and-how-is-it-applied-to-financial-markets]
+
+Using generated data, an equal-weighted portfolio is built and indicators of return and variance are derived on said portfolio
+
+## Quick presentation of models and parameters
+
+Geometric Brownian motion vector simulate in datset used required parameters (some of them are set as tuning parameter for user)
+
+* **So** : Start value of asset price (set at 100) 
+* **mu** : Drift, mean of Brownian motion
+* **Sigma** : Volatility of Brownian motion
+* **N_Eq** : Number of Asset (Used in portfolio)
+* **t** : Number of points for observed price (set)
+
+Portfolio construction is done by using equal weight which means that for N asset the individual percentage is  (1/N). Note that the number of asset is also a parameter that can be tuned by user.
+
+## Indicators computing and Data Representations (1/2)
+
+```{r ptf_indicators, echo = TRUE}
+## Compute Portfolio Return
+  ptf_returns <- sum(df_eq_return * pf_eq_w)
+  print(paste0("Portfolio Return is : ", 
+               round(100*ptf_returns, 2), "%"))
+## Compute Portfolio Volatility
+  df_eq_cov <- cov(df_eq_return)
+  ptf_volatility <- sqrt(t(pf_eq_w) %*% df_eq_cov %*% pf_eq_w)
+  print(paste0("Portfolio Volatility is : ", 
+               round(100*ptf_volatility, 2), "%"))
+```
+
+
+## Indicators computing and Data Representations (2/2)
+```{r App_plot, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+#create histogram of values for price
+df_eq_graph
+
+```
+
